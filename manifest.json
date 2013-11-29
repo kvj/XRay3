@@ -1,0 +1,29 @@
+{
+	"name": "XRay3",
+	"description": "Another attempt",
+	"version": "0.0.1",
+	"manifest_version": 2,
+	"app": {
+		"background": {
+			"scripts": ["start.js"]
+		}
+	},
+	"icons": { 
+		"16": "img/xray3_logo_16.png",
+		"128": "img/xray3_logo_128.png"
+	},
+	"permissions": [
+		"unlimitedStorage",
+		"<all_urls>",
+		"identity",
+		"idle",
+		"notifications"
+	],
+	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgDydhGokK1dv3A/UyALWTAze9JqNyM7yd0WuczkwOO4fQJHY/St2VyLfJ7d5pdh9vvlwW5MgoNqeye0dNmojGyVA58FqNdOYJhCYBLBHgQw+nQh0+bjLM5+RMHxhYVnK4esXzoktixJRF4A2MBgRQxoLBxW5pOl1llCN6nAd1LTY5nZSv/mCraWUxTV/gmYW/mLi6j2A8RSWH+pAqD92Qo4vFHNPiZ37Twk30vZ73ntTCml3PZwc3B2Z9Y5xKoOMUgEPrJUV8MB7YXDsWEkXnsmCkSX8zEAg6ypLJMXgFhCClFHJaXJPPcZN/l6ZWAOywhvLDdXWGRvE/QzszLVk6QIDAQAB",
+	"oauth2": {
+		"client_id": "927181775700-0fviibhuhr6t0vo2skg1001nkhki9rcd.apps.googleusercontent.com",
+		"scopes": [
+			"https://www.googleapis.com/auth/drive"
+		]
+	}
+}

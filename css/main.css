@@ -1,0 +1,67 @@
+.main_body {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 120px;
+	bottom: 40px;
+}
+
+.main_status {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: 0.5em;
+}
+
+.main_tabs {
+	margin-left: 0.5em;
+}
+
+.tab_body {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.fmanager_left {
+	position: absolute;
+	width: 30%;
+	height: 100%;
+}
+
+.fmanager_right {
+	position: absolute;
+	height: 100%;
+	right: 0;
+	left: 30%;
+}
+
+.fmanager_groups {
+	position: absolute;
+	width: 100%;
+	height: 50%;
+}
+
+.fmanager_browser {
+	position: absolute;
+	width: 100%;
+	height: 50%;
+	bottom: 0;
+}
+
+.fmanager_groups_toolbar {
+	padding-left: 1em;
+	height: 3em;
+}
+
+.fmanager_groups_list {
+	padding-left: 0.5em;
+}
+
+.group_edit_form {
+	position: absolute;
+	top: 3em;
+	left: 1em;
+	right: 1em;
+}
