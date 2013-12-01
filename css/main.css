@@ -48,6 +48,15 @@
 	width: 100%;
 	height: 50%;
 	bottom: 0;
+	display: none;
+}
+
+.fmanager_browser_visible .fmanager_groups {
+	height: 50%;
+}
+
+.fmanager_browser_visible .fmanager_browser {
+	display: block;
 }
 
 .fmanager_groups_toolbar {
@@ -64,4 +73,41 @@
 	top: 3em;
 	left: 1em;
 	right: 1em;
+}
+
+.fmanager_path {
+	margin-left: 0.5em;
+}
+
+.fmanager_browser_files {
+	position: absolute;
+	top: 3em;
+	left: 0.5em;
+	right: 0;
+	bottom: 0;
+	overflow: auto;
+}
+
+.fmanager_load {
+	position: absolute;
+	top: 4em;
+	left: 0.5em;
+	right: 0;
+	display: none;
+	z-index: 2;
+}
+
+.fmanager_load_show {
+	display: block;
+}
+
+.fmanager_file_name {
+	margin-left: 0.5em;
+	margin-right: 0.3em;
+}
+
+.fmanager_file_item {
+	padding-left: 0.3em;
+	padding-top: 0.3em;
+	cursor: pointer;
 }
