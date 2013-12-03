@@ -1,5 +1,6 @@
 var DataProvider = function() { // Extends IndexedDB
 	this.parseWorker = new Worker('js/workers/file_parse.js');
+	this.textWorker = new Worker('js/workers/text_parse.js');
 };
 DataProvider.prototype = new IndexedDB();
 
@@ -147,6 +148,12 @@ var iterateOver = function (array, handler, cb, config) {
 DataProvider.prototype.replaceWords = function(fileID, words, handler) { // Removes old and adds new files
 	var t = this.update('words');
 	this.execTransaction(t, function(err) { // Add done
+		if (!err) { // Done - send message to Worker
+			this.manageWords({command: 'delete', fileID: fileID});
+			if (words.length>0) { // Also have new words
+				this.manageWords({command: 'add'}, words);
+			};
+		};
 		handler(err, words);
 	}.bind(this));
 	var store = t.objectStore('words');
@@ -206,3 +213,33 @@ DataProvider.prototype.listWords = function(fileID, handler) { // Fetches all co
 	return this.list(t.objectStore('words').index('file_id').openCursor(IDBKeyRange.only(fileID)), handler);
 };
 
+DataProvider.prototype.reloadWords = function(handler) { // Reload all words
+	return this.list(this.fetch('words').objectStore('words').openCursor(), function(err, list) { // Loaded
+		if (err) { // Failed
+			return handler(err);
+		};
+		this.manageWords({command: 'delete'});
+		if (list.length>0) { // Also have new words
+			this.manageWords({command: 'add'}, list);
+		};
+		handler(err, list);
+	}.bind(this));
+};
+
+DataProvider.prototype.addProcessResultHandler = function(handler) { // Adds Worker listener
+	this.textWorker.addEventListener('message', handler);
+};
+
+DataProvider.prototype.manageWords = function(command, words) { // Sends words management command to Worker
+	this.textWorker.postMessage({
+		command: command,
+		words: words
+	});
+};
+
+DataProvider.prototype.processText = function(lines) { // Sends text to parse to Worker
+	this.textWorker.postMessage({
+		command: {command: 'process'},
+		lines: lines
+	});
+};

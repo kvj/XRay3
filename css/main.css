@@ -40,7 +40,8 @@
 .fmanager_groups {
 	position: absolute;
 	width: 100%;
-	height: 50%;
+	height: 100%;
+	
 }
 
 .fmanager_browser {
@@ -65,7 +66,12 @@
 }
 
 .fmanager_groups_list {
-	padding-left: 0.5em;
+	overflow: auto;
+	position: absolute;
+	left: 0.5em;
+	right: 0;
+	bottom: 0.5em;
+	top: 2.5em;
 }
 
 .group_edit_form {
@@ -111,3 +117,82 @@
 	padding-top: 0.3em;
 	cursor: pointer;
 }
+
+.translate_left {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	top: 0;
+	right: 30%;
+}
+
+.translate_right {
+	position: absolute;
+	bottom: 0;
+	left: 70%;
+	right: 0;
+	top: 0;
+	padding: 1em;
+}
+
+.translate_text {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	top: 2.5em;
+	overflow: auto;
+}
+
+.translate_toolbar {
+	padding-left: 0.5em;
+}
+
+.translate_area_panel {
+	position: absolute;
+	left: 1em;
+	right: 1em;
+	top: 3em;
+	z-index: 2;
+	display: none;
+}
+
+.translate_area_panel_visible {
+	display: block;
+}
+
+.translate_area_buttons {
+	margin-top: 0.5em;
+}
+
+.translate_text_line {
+	margin: 0.5em;
+	-webkit-user-select: text;
+}
+
+.translate_text_char {
+}
+
+.translate_text {
+	margin: 0.5em;
+	border: 1px dashed #888888;
+	border-radius: 0.5em;
+}
+
+.word {
+	display: inline-block;
+	vertical-align: baseline;
+}
+
+.word_transcript {
+	white-space: nowrap;
+	font-size: 0.9em;
+	text-align: center;
+}
+
+.word_original {
+	white-space: nowrap;
+	text-align: center;
+	font-weight: bold;
+}
+

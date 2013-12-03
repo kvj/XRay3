@@ -12,7 +12,7 @@ yepnope({
 			ui.data = data;
 			var ttab = ui.addTab(TranslateTab);
 			var ftab = ui.addTab(FileManagerTab);
-			ui.selectTab(ftab.id);
+			ui.selectTab(ttab.id);
 		}.bind(this));
 	}
 });

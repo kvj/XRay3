@@ -55,6 +55,8 @@ ChromeFileProvider.prototype.logout = function(handler) { // Removes token
 };
 
 ChromeFileProvider.prototype.xhr = function(query, body, handler, config) { // Make API request
+	if (!this.token) { // No login
+	};
 	if (!config) { // Default - empty
 		config = {};
 	};
@@ -72,8 +74,21 @@ ChromeFileProvider.prototype.xhr = function(query, body, handler, config) { // M
     xhr.open(body? 'POST': 'GET', url);
 	// xhr.setRequestHeader('Authorization', 'Bearer '+this.token);
 	xhr.addEventListener('load', function(evt) { // Request complete
+		if (xhr.status == 401 && config.relogin != false) { // No authorization and it's not prohibited - let's try to relogin
+			return chrome.identity.removeCachedAuthToken({
+				token: this.token
+			}, function() { // Done
+				return this.auth(function(token) { // Token refreshed?
+					if (token) { // New token
+						this.token = token;
+					};
+					config.relogin = false;
+					return this.xhr(query, body, handler, config); // One more try
+				}.bind(this));
+			}.bind(this));
+		};
 		if (xhr.status != 200) { // HTTP error
-			return handler('HTTP '+xhr.status+': '+xhr.response);
+			return handler('HTTP '+xhr.status);
 		};
 		if (config.rawOutput) { // No parsing
 			return handler(null, xhr.response);
