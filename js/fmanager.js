@@ -240,6 +240,10 @@ var FileManagerTab = function() { // Provides file manager tab
 };
 FileManagerTab.prototype = new TabProvider();
 
+FileManagerTab.prototype.onShow = function() { // Relaod groups
+	this.reloadGroups();
+};
+
 FileManagerTab.prototype.updateStatus = function(token) { // Updates right caption
 	var p = $('.main_auth').empty();
 	if (!token) { // No token - need new one
@@ -278,7 +282,6 @@ FileManagerTab.prototype.createDOM = function() {
 		}.bind(this));
 	}.bind(this));
 	this.div = dom;
-	this.reloadGroups();
 	return dom;
 };
 
