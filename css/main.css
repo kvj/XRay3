@@ -196,3 +196,37 @@
 	font-weight: bold;
 }
 
+.main_scratchpad {
+	position: absolute;
+	bottom: 0.5em;
+	right: 0.5em;
+	z-index: 3;
+	margin: 0;
+	background-color: #ffffff;
+}
+
+.scratchpad_visible {
+	width: 35%;
+}
+
+.scratchpad_counter {
+	margin-right: 0.5em;
+}
+
+.scratchpad_title {
+	display: none;
+}
+
+.scratchpad_visible .scratchpad_title {
+	display: inline;
+}
+
+.scratchpad_body {
+	display: none;
+	max-height: 40%;
+	overflow: auto;
+}
+
+.scratchpad_visible .scratchpad_body {
+	display: block;
+}

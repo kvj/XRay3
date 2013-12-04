@@ -8,7 +8,7 @@ TranslateTab.prototype.createDOM = function() {
 	this.ui.data.addProcessResultHandler(function(evt) { // Word translated
 		this.onWordTranslated(evt.data.line, evt.data.position, evt.data.word);
 	}.bind(this));
-	var dom = $('<div class="tab_body"><div class="translate_left"><div class="translate_toolbar btn-group"><button type="button" class="btn btn-default translate_tool_enter">New text...</button><button type="button" class="btn btn-default translate_tool_to_right">Translate...</button></div><div class="translate_text"></div><div class="translate_area_panel panel panel-default"><div class="panel-heading">Enter text here</div><div class="panel-body"><textarea class="form-control translate_area_textarea" rows="3"></textarea><div class="btn-group translate_area_buttons"><button type="button" class="btn btn-default translate_do_process">Process</button><button type="button" class="btn btn-default translate_do_cancel">Cancel</button></div></div></div></div><div class="translate_right"><div class="translate_form"><form role="form"><div class="form-group"><label for="translate_form_original">Original</label><input type="text" class="form-control" id="translate_form_original"/></div><div class="form-group"><label for="translate_form_transcript">Transciption</label><input type="text" class="form-control input-sm" id="translate_form_transcript"/></div><div class="form-group"><label for="translate_form_translate">Translation</label><input type="text" class="form-control input-sm" id="translate_form_translate"/></div><div><button type="button" class="btn btn-default translate_tool_save">Scratchpad</button></div></form></div></div></div>');
+	var dom = $('<div class="tab_body"><div class="translate_left"><div class="btn-toolbar" role="toolbar"><div class="translate_toolbar btn-group"><button type="button" class="btn btn-primary translate_tool_enter">New text...</button></div><div class="btn-group"><button type="button" class="btn btn-default translate_tool_to_right">Translate...</button></div></div><div class="translate_text"></div><div class="translate_area_panel panel panel-default"><div class="panel-heading">Enter text here</div><div class="panel-body"><textarea class="form-control translate_area_textarea" rows="3"></textarea><div class="btn-group translate_area_buttons"><button type="button" class="btn btn-default translate_do_process">Process</button><button type="button" class="btn btn-default translate_do_cancel">Cancel</button></div></div></div></div><div class="translate_right"><div class="translate_form"><form role="form"><div class="form-group"><label for="translate_form_original">Original</label><input type="text" class="form-control" id="translate_form_original"/></div><div class="form-group"><label for="translate_form_transcript">Transciption</label><input type="text" class="form-control input-sm" id="translate_form_transcript"/></div><div class="form-group"><label for="translate_form_translate">Translation</label><input type="text" class="form-control input-sm" id="translate_form_translate"/></div><div><button type="button" class="btn btn-success translate_tool_save">Scratchpad</button></div></form></div></div></div>');
 	this.div = dom;
 	dom.find('.translate_do_cancel').on('click', function() { // Hide panel
 		this.toggleAreaPanel(false);
@@ -36,6 +36,27 @@ TranslateTab.prototype.createDOM = function() {
 			dom.find('#translate_form_translate').val('');
 		};
 	});
+	dom.find('.translate_tool_save').on('click', function() {
+		var orig = $.trim(dom.find('#translate_form_original').val());
+		if (!orig) {
+			this.ui.showError('Original is empty');
+		};
+		var word = {
+			items: [orig]
+		};
+		var val = $.trim(dom.find('#translate_form_transcript').val());
+		if (val) {
+			word.items.push(val);
+		}
+		val = $.trim(dom.find('#translate_form_translate').val());
+		if (val) {
+			word.items.push(val);
+		}
+		this.toScratchpad(word);
+		dom.find('#translate_form_original').val('');
+		dom.find('#translate_form_transcript').val('');
+		dom.find('#translate_form_translate').val('');
+	}.bind(this));
 	return dom;
 };
 
@@ -47,6 +68,14 @@ TranslateTab.prototype.toggleAreaPanel = function(visible) { // Toggles visibili
 	} else {
 		panel.removeClass('translate_area_panel_visible');
 	}
+};
+
+TranslateTab.prototype.toScratchpad = function(word) {
+	this.ui.data.toScratchpad(word);
+	this.ui.refreshScratchpad();
+	if (this.text) { // Refresh text
+		this.startProcessing(this.text);
+	};
 };
 
 TranslateTab.prototype.onWordTranslated = function(line, pos, word) { // When word is translated
@@ -107,6 +136,7 @@ TranslateTab.prototype.startProcessing = function(text) { // Displays text and s
 			lineDiv.append(charDiv);
 		};
 	};
+	this.text = text;
 	this.lines = outLines;
 	this.ui.data.processText(outLines);
 };
@@ -116,5 +146,6 @@ TranslateTab.prototype.onShow = function() { // Reload words?
 		if (err) { // Failed
 			return this.ui.showError(err);
 		};
+		this.ui.refreshScratchpad();
 	}.bind(this));
 };

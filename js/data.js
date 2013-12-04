@@ -1,6 +1,7 @@
 var DataProvider = function() { // Extends IndexedDB
 	this.parseWorker = new Worker('js/workers/file_parse.js');
 	this.textWorker = new Worker('js/workers/text_parse.js');
+	this.scratchpad = [];
 };
 DataProvider.prototype = new IndexedDB();
 
@@ -222,6 +223,7 @@ DataProvider.prototype.reloadWords = function(handler) { // Reload all words
 		if (list.length>0) { // Also have new words
 			this.manageWords({command: 'add'}, list);
 		};
+		this.manageWords({command: 'add'}, this.scratchpad);
 		handler(err, list);
 	}.bind(this));
 };
@@ -242,4 +244,9 @@ DataProvider.prototype.processText = function(lines) { // Sends text to parse to
 		command: {command: 'process'},
 		lines: lines
 	});
+};
+
+DataProvider.prototype.toScratchpad = function(word) {
+	this.scratchpad.push(word);
+	this.manageWords({command: 'add'}, [word]);
 };

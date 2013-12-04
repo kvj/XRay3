@@ -49,9 +49,39 @@ var UI = function() { // Object created at application startup
 };
 
 UI.prototype.createDOM = function() { // Create DOM objects with jQuery
-	var dom = $('<nav class="navbar navbar-default" role="navigation"><div class="navbar-header"><a class="navbar-brand" href="#">XRay3</a></div><p class="navbar-text navbar-right main_auth">???</p></nav><div class="main_tabs"><ul class="nav nav-tabs main_tabs_ul"></ul></div><div class="main_body"/><div class="main_status"></div>');
-	$(document.body).append(dom);
+	var dom = $('<nav class="navbar navbar-default" role="navigation"><div class="navbar-header"><a class="navbar-brand" href="#">XRay3</a></div><p class="navbar-text navbar-right main_auth">???</p></nav><div class="main_tabs"><ul class="nav nav-tabs main_tabs_ul"></ul></div><div class="main_body"/><div class="main_status"></div></div><div class="main_scratchpad panel panel-default"><div class="scratchpad_body"><ul class="list-group scratchpad_list"></ul></div><div class="panel-footer"><span class="scratchpad_counter">(1)</span><span class="scratchpad_title">Scratchpad</span><div class="pull-right btn-group"><button class="btn btn-xs btn-primary scratchpad_toggle"><span class="glyphicon glyphicon-resize-full"></span></button></div></div>');
+	this.scratchpadVisible = false;
 	this.tabs = [];
+	dom.find('.scratchpad_toggle').on('click', function() {
+		this.toggleScratchpad();
+	}.bind(this));
+	$(document.body).append(dom);
+	this.div = dom;
+};
+
+UI.prototype.toggleScratchpad = function() {
+	this.scratchpadVisible = !this.scratchpadVisible;
+	if (this.scratchpadVisible) {
+		$('.main_scratchpad').addClass('scratchpad_visible');
+	} else {
+		$('.main_scratchpad').removeClass('scratchpad_visible');
+	}
+};
+
+UI.prototype.refreshScratchpad = function() {
+	$('.scratchpad_counter').text('('+this.data.scratchpad.length+')');
+	var ul = $('.scratchpad_list').empty();
+	var onWord = function(li, word, i) {
+		// Drag
+	}.bind(this);
+	for (var i = 0; i<this.data.scratchpad.length; i++) {
+		var word = this.data.scratchpad[i];
+		var li = $('<li class="list-group-item scratchpad_item"></li>');
+		var text = word.items.join(' / ');
+		li.text(text);
+		onWord(li, word, i);
+		ul.append(li);
+	};
 };
 
 UI.prototype.showError = function(error) { // Show error
