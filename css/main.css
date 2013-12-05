@@ -230,3 +230,7 @@
 .scratchpad_visible .scratchpad_body {
 	display: block;
 }
+
+.translate_options_form {
+	width: 100%;
+}

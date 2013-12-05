@@ -1,7 +1,43 @@
+var LocalSettingsProvider = function() { // Local storage API
+};
+
+LocalSettingsProvider.prototype.get = function(defObject, handler) { // Returns value by name
+};
+
+LocalSettingsProvider.prototype.set = function(valuesObj, handler) { // Sets value by name
+};
+
+var ChromeSettingsProvider = function() { // Chrome impl.
+};
+
+ChromeSettingsProvider.prototype.get = function(defObject, handler) { // Returns values by names
+	chrome.storage.local.get(defObject, function(items) { // When done
+		if (items) { // No error
+			return handler(null, items);
+		} else { // Error
+			return handler('Storage error');
+		};
+	}.bind(this));
+};
+
+ChromeSettingsProvider.prototype.set = function(valuesObj, handler) { // Sets values by names
+	chrome.storage.local.set(valuesObj, function(items) { // When done
+		if (!handler) { // No one cares
+			return;
+		};
+		if (items) { // No error
+			return handler(null, items);
+		} else { // Error
+			return handler('Storage error');
+		};
+	}.bind(this));
+};
+
 var DataProvider = function() { // Extends IndexedDB
 	this.parseWorker = new Worker('js/workers/file_parse.js');
 	this.textWorker = new Worker('js/workers/text_parse.js');
 	this.scratchpad = [];
+	this.storage = new ChromeSettingsProvider();
 };
 DataProvider.prototype = new IndexedDB();
 
