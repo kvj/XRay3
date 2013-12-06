@@ -348,6 +348,15 @@ FileManagerTab.prototype.reloadGroups = function() { // Reload groups
 					}.bind(this));
 					var ul = panel.find('.group_files');
 					var onItem = function(li, file) {
+						li.on('dragover', function(evt) { // Allow words drag
+							log('dragover', evt.originalEvent.dataTransfer.types.indexOf('Word'));
+							evt.preventDefault();
+						}.bind(this)).on('drop', function(evt) { // Drop - save
+							var orig = evt.originalEvent.dataTransfer.getData('Text');
+							var word = JSON.parse(evt.originalEvent.dataTransfer.getData('Word'));
+							log('Dropped:', orig, word);
+							evt.preventDefault();
+						}.bind(this));
 						li.find('.fmanager_file_name').text(file.name);
 						li.find('.group_file_remove').on('click', function() { // Remove file
 							this.ui.data.deleteFile(file.id, function(err) { // Removed

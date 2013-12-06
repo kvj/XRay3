@@ -68,7 +68,7 @@ TranslateTab.prototype.createDOM = function() {
 			};
 			dom.find('#translate_form_transcript').val('');
 			dom.find('#translate_form_translate').val('');
-			window.open('http://translate.google.com/#'+data.translate_form+'/'+data.translate_to+'/'+encodeURIComponent(orig), 'xray3_translate');
+			window.open('http://translate.google.com/#'+data.translate_from+'/'+data.translate_to+'/'+encodeURIComponent(orig), 'xray3_translate');
 		}.bind(this));
 	}.bind(this));
 	return dom;

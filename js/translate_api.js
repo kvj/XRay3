@@ -83,10 +83,10 @@ var TranslateSettingsUI = function(ui) { // Binds settings UI to toolbar
 			selectFrom.append($('<option value="'+languages[i].code+'">'+languages[i].name+'</option>'));
 			selectTo.append($('<option value="'+languages[i].code+'">'+languages[i].name+'</option>'));
 		};
-		selectFrom.off('change').on('change', function() { // Changed
+		selectFrom.off('input').on('change', function() { // Changed
 			this.ui.data.storage.set({translate_from: selectFrom.val()});
 		}.bind(this));
-		selectTo.off('change').on('change', function() { // Changed
+		selectTo.off('input').on('change', function() { // Changed
 			this.ui.data.storage.set({translate_to: selectTo.val()});
 		}.bind(this));
 		this.ui.data.storage.get({translate_from: 'en', translate_to: 'en'}, function(err, data) { // Settings came

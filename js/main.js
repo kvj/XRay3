@@ -73,6 +73,10 @@ UI.prototype.refreshScratchpad = function() {
 	$('.scratchpad_counter').text('('+this.data.scratchpad.length+')');
 	var ul = $('.scratchpad_list').empty();
 	var onWord = function(li, word, i) {
+		li.attr('draggable', true).on('dragstart', function(evt) { // Start drag
+			evt.originalEvent.dataTransfer.setData("Text", word.items[0]);
+			evt.originalEvent.dataTransfer.setData("Word", JSON.stringify(word));
+		}.bind(this));
 		// Drag
 	}.bind(this);
 	for (var i = 0; i<this.data.scratchpad.length; i++) {
