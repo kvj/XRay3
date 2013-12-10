@@ -114,6 +114,19 @@ DataProvider.prototype.newFile = function(obj, handler) { // Creates new collect
 	};
 };
 
+DataProvider.prototype.updateFile = function(obj, handler) { // Creates new collection
+	var t = this.update('files');
+	this.execTransaction(t, function(err) { // Add done
+		handler(err, obj);
+	}.bind(this));
+	try { // Execute insert
+		t.objectStore('files').put(obj);
+	} catch (e) { // DB error
+		this.cancelTransaction(t);
+		handler('DB error');
+	};
+};
+
 DataProvider.prototype.updateCollection = function(object, handler) { // Saves collection configuration
 	var t = this.update('collections');
 	this.execTransaction(t, function(err) { // Add done
@@ -135,6 +148,41 @@ DataProvider.prototype.listCollections = function(handler) { // Fetches all coll
 DataProvider.prototype.listFiles = function(collectionID, handler) { // Fetches all collections
 	var t = this.fetch('files');
 	return this.list(t.objectStore('files').index('collection_id').openCursor(IDBKeyRange.only(collectionID)), handler);
+};
+
+DataProvider.prototype.listSelectedWords = function(handler) { // Returns all selected words, including scratchpad
+	var t = this.fetch('files', 'words');
+	this.list(t.objectStore('files').openCursor(), function(err, files) { // All files
+		if (err) { // Failed
+			return handler(err); // Break
+		};
+		var arr = [];
+		for (var i = 0; i < files.length; i++) { // Only need selected files
+			if (files[i].selected) { // Our case
+				arr.push(files[i].id); // Only need ID to get all words
+			};
+		};
+		var result = [];
+		iterateOver(arr, function(id, cb) { // For every fileID
+			this.listWords(id, function(err, list) { // All words
+				if (err) { // Failed
+					return cb(err);
+				};
+				for (var i = 0; i < list.length; i++) { // Copy to result
+					result.push(list[i]);
+				};
+				cb(null);
+			}.bind(this))
+		}.bind(this), function(err) { // All done
+			if (err) { // Failed
+				return handler(err); // Stop
+			};
+			for (var i = 0; i < this.scratchpad.length; i++) { // Finally all words from scratchpad
+				result.push(this.scratchpad[i]);
+			};
+			handler(null, result);
+		}.bind(this));
+	}.bind(this));
 };
 
 var iterateOver = function (array, handler, cb, config) {
@@ -182,6 +230,20 @@ var iterateOver = function (array, handler, cb, config) {
 	start();
 };
 
+DataProvider.prototype.addWord = function(word, fileID, handler) { // Adds new word (will be uploaded later)
+	word.id = id();
+	word.file_id = fileID;
+	word.pending = true;
+	var t = this.update('words');
+	this.execTransaction(t, handler);
+	try { // Execute insert
+		t.objectStore('words').put(word);
+	} catch (e) { // DB error
+		this.cancelTransaction(t);
+		handler('DB error');
+	};
+};
+
 DataProvider.prototype.replaceWords = function(fileID, words, handler) { // Removes old and adds new files
 	var t = this.update('words');
 	this.execTransaction(t, function(err) { // Add done
@@ -194,16 +256,19 @@ DataProvider.prototype.replaceWords = function(fileID, words, handler) { // Remo
 		handler(err, words);
 	}.bind(this));
 	var store = t.objectStore('words');
+	var wordsRemoved = 0;
 	this.execRequest(store.index('file_id').openCursor(IDBKeyRange.only(fileID)), function(err, cursor) { // Opened
 		if (err) {
 			return handler(err);
 		};
 		if (cursor) {
 			cursor.delete();
+			wordsRemoved++;
 			if (cursor.continue) {
 				return cursor.continue();
 			};
 		};
+		log('replaceWords', fileID, wordsRemoved, words.length);
 		for (var i = 0; i < words.length; i++) { // Save words
 			var w = words[i];
 			w.id = id();
@@ -213,17 +278,16 @@ DataProvider.prototype.replaceWords = function(fileID, words, handler) { // Remo
 	}.bind(this));
 };
 
-DataProvider.prototype.parse = function(collection, file, content, handler) { // Parses file
+DataProvider.prototype.parse = function(fileID, pattern, content, handler) { // Parses file
 	var messageHandler = function(evt) { // Parse done
-		log('Parsing done:', evt.data, file.name);
+		// log('Parsing done:', evt.data, fileID);
 		this.parseWorker.removeEventListener('message', messageHandler);
-		this.replaceWords(file.id, evt.data.items, handler);
+		this.replaceWords(fileID, evt.data.items, handler);
 	}.bind(this);
 	this.parseWorker.addEventListener('message', messageHandler);
 	this.parseWorker.postMessage({
 		content: content,
-		pattern: collection.pattern,
-		file: file
+		pattern: pattern
 	});
 };
 
@@ -285,4 +349,14 @@ DataProvider.prototype.processText = function(lines) { // Sends text to parse to
 DataProvider.prototype.toScratchpad = function(word) {
 	this.scratchpad.push(word);
 	this.manageWords({command: 'add'}, [word]);
+};
+
+DataProvider.prototype.fromScratchpad = function(word) { // Remove word from scratchpad
+	for (var i = 0; i < this.scratchpad.length; i++) { // Search by original
+		var item = this.scratchpad[i];
+		if (item.items[0] == word.items[0]) { // Found
+			this.scratchpad.splice(i, 1);
+			i--;
+		};
+	};
 };

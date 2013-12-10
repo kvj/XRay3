@@ -19,6 +19,9 @@ FileProvider.prototype.parents = function(uid, handler) { // Load parents for fi
 FileProvider.prototype.download = function(uid, handler) { // Downloads file by ID
 };
 
+FileProvider.prototype.upload = function(uid, content, handler) { // Uploads file by ID
+};
+
 var ChromeFileProvider = function() { // Chrome version
 	this.scope = 'https://www.googleapis.com/drive/v2/';
 };
@@ -71,7 +74,7 @@ ChromeFileProvider.prototype.xhr = function(query, body, handler, config) { // M
 		url += '?';
 	}
 	url += 'access_token='+this.token;
-    xhr.open(body? 'POST': 'GET', url);
+    xhr.open(config.method || (body? 'POST': 'GET'), url);
 	// xhr.setRequestHeader('Authorization', 'Bearer '+this.token);
 	xhr.addEventListener('load', function(evt) { // Request complete
 		if (xhr.status == 401 && config.relogin != false) { // No authorization and it's not prohibited - let's try to relogin
@@ -217,6 +220,16 @@ FileProvider.prototype.parents = function(uid, handler) { // Load parents for fi
 	}.bind(this));
 };
 
+ChromeFileProvider.prototype.upload = function(uid, content, handler) { // Uploads file by ID
+	this.xhr('https://www.googleapis.com/upload/drive/v2/files/'+uid+'?uploadType=media', content, function(err, data) { // Uploaded
+		log('Upload done:', err, data);
+		handler(err, data);
+	}.bind(this), {
+		absolute: true,
+		method: 'PUT'
+	});
+};
+
 ChromeFileProvider.prototype.download = function(uid, handler) { // Downloads file by ID
 	this.fileInfo(uid, function(err, info) { // Metadata
 		if (err) { // Failed
@@ -293,6 +306,77 @@ FileManagerTab.prototype.browserVisible = function(visible) { // set browser vis
 	};
 };
 
+FileManagerTab.prototype.convertSpecialChars = function(str) { // Replaces all \... with supported char sequences
+	var pattern = new String(str);
+	var reg = /\\([a-z])/;
+	var m = pattern.match(reg);
+	for (var m = pattern.match(reg); m; m = pattern.match(reg)) {
+		var repl = '';
+		if (m[1] == 'n') { // New line
+			repl = '\n';
+		};
+		if (m[1] == 't') { // Tab char
+			repl = '\t';
+		};
+		pattern = pattern.replace(m[0], repl);
+	};
+	return pattern; // All special chars replaced
+};
+
+FileManagerTab.prototype.injectValues = function(str, items) { // Replaces {1} with array values
+	var pattern = new String(str);
+	var reg = /\{([1-9])\}/;
+	var m = pattern.match(reg);
+	for (var m = pattern.match(reg); m; m = pattern.match(reg)) {
+		var repl = '';
+		var idx = parseInt(m[1]) || 1;
+		if (idx<=items.length && idx>0) { // Have value
+			repl = items[idx-1];
+		};
+		pattern = pattern.replace(m[0], repl);
+	};
+	return pattern; // All data injected
+};
+
+FileManagerTab.prototype.processFiles = function(group, files, handler) { // Downloads, updates and parses files
+	iterateOver(files, function(item, cb) { // Process file
+		this.api.download(item.uid, function(err, content) { // Downloaded
+			if (err) { // Failed
+				return cb(err);
+			};
+			this.ui.data.listWords(item.id, function(err, words) { // All current words
+				var addContent = '';
+				for (var i = 0; i < words.length; i++) { // Look for words with pending = true
+					var word = words[i];
+					if (!word.pending) { // Original word
+						continue;
+					};
+					// Pending word
+					var newContent = this.convertSpecialChars(group.add_pattern || '');
+					newContent = this.injectValues(newContent, word.items);
+					if ($.trim(newContent)) { // Have data
+						addContent += newContent;
+					};
+				};
+				// log('Process files:', item.name, addContent, content);
+				if (addContent) { // Have to upload first
+					content += addContent
+					this.api.upload(item.uid, content, function(err) { // Uploaded
+						if (err) { // Failed to upload
+							return cb(err); // Stop parsing
+						};
+						this.ui.data.parse(item.id, group.pattern, content, cb);
+					}.bind(this));
+				} else { // No new content - just parse
+					this.ui.data.parse(item.id, group.pattern, content, cb);
+				};
+			}.bind(this));
+		}.bind(this));
+	}.bind(this), function(err) { // All refreshes done
+		handler(err);
+	}.bind(this));
+};
+
 FileManagerTab.prototype.reloadGroups = function() { // Reload groups
 	var div = this.div.find('.fmanager_groups_list');
 	this.ui.data.listCollections(function(err, list) { // List of collections
@@ -333,28 +417,48 @@ FileManagerTab.prototype.reloadGroups = function() { // Reload groups
 						return this.ui.showError(err);
 					};
 					panel.find('.group_refresh').on('click', function() { // parse files
-						var onItem = function(info) { // Refresh every file
-							this.api.download(info.uid, function(err, content) { // Downloaded
-								if (err) { // Failed
-									return this.ui.showError(err);
-								};
-								this.ui.data.parse(item, info, content, function(err, items) { // Parse done
-								}.bind(this));
-							}.bind(this));
-						}.bind(this);
-						for (var i = 0; i < list.length; i++) { // Parse every file
-							onItem(list[i]);
-						};
+						this.processFiles(item, list, function(err) { // When refresh done
+							if (err) { // Failed
+								return this.ui.showError(err);
+							};
+							this.reloadGroups();
+						}.bind(this));
 					}.bind(this));
 					var ul = panel.find('.group_files');
 					var onItem = function(li, file) {
+						var refreshCount = function() { // Refreshes counter
+							this.ui.data.listWords(file.id, function(err, items) { // Words loaded
+								if (!err) { // Loaded
+									var total = items.length;
+									var pending = 0;
+									for (var i = 0; i < items.length; i++) { // Search for pending
+										if (items[i].pending) { // Found
+											pending++;
+										};
+									};
+									li.find('.fmanager_file_words').text(''+items.length+(pending>0 ? '/'+pending: ''));
+									// log('refreshCount', file, items.length, pending);
+								};
+							}.bind(this));
+						}.bind(this);
+						var addWord = function(word) { // Called from drop handler. Add to DB
+							this.ui.data.addWord(word, file.id, function(err) { // Add word
+								if (err) { // Failed
+									return this.ui.showError(err);
+								};
+								this.ui.data.fromScratchpad(word);
+								this.ui.refreshScratchpad();
+								refreshCount();
+							}.bind(this))
+						}.bind(this);
 						li.on('dragover', function(evt) { // Allow words drag
-							log('dragover', evt.originalEvent.dataTransfer.types.indexOf('Word'));
+							// log('dragover', evt.originalEvent.dataTransfer.types.indexOf('Word'));
 							evt.preventDefault();
 						}.bind(this)).on('drop', function(evt) { // Drop - save
 							var orig = evt.originalEvent.dataTransfer.getData('Text');
 							var word = JSON.parse(evt.originalEvent.dataTransfer.getData('Word'));
 							log('Dropped:', orig, word);
+							addWord(word);
 							evt.preventDefault();
 						}.bind(this));
 						li.find('.fmanager_file_name').text(file.name);
@@ -366,14 +470,19 @@ FileManagerTab.prototype.reloadGroups = function() { // Reload groups
 								this.reloadGroups();
 							}.bind(this));
 						}.bind(this));
-						this.ui.data.listWords(file.id, function(err, items) { // Words loaded
-							if (!err) { // Loaded
-								li.find('.fmanager_file_words').text(''+items.length);
-							};
+						li.find('.fmanager_file_selected').attr('checked', file.selected? true: false).on('change', function() { // Remove file
+							file.selected = li.find('.fmanager_file_selected').is(':checked');
+							log('Value:', file.selected);
+							this.ui.data.updateFile(file, function(err) { // Updated
+								if (err) { // Show error
+									return this.ui.showError(err); // Failed to update
+								};
+							}.bind(this));
 						}.bind(this));
+						refreshCount();
 					}.bind(this);
 					for (var j = 0; j < list.length; j++) { // Show files
-						var li = $('<li class="fmanager_file_item"><span class="glyphicon glyphicon-file"></span><span class="fmanager_file_name"></span><span class="badge fmanager_file_words">?</span><div class="pull-right btn-group"><button class="btn btn-primary btn-xs group_file_remove"><span class="glyphicon glyphicon-trash"></span></button></div></li>');
+						var li = $('<li class="fmanager_file_item"><input type="checkbox" class="input fmanager_file_selected" value="on"/><span class="glyphicon glyphicon-file"></span><span class="fmanager_file_name"></span><span class="badge fmanager_file_words">?</span><div class="pull-right btn-group"><button class="btn btn-primary btn-xs group_file_remove"><span class="glyphicon glyphicon-trash"></span></button></div></li>');
 						onItem(li, list[j]);
 						ul.append(li);
 					};

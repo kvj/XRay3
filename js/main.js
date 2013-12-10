@@ -1,5 +1,5 @@
 yepnope({
-	load: ['lib/jquery.min.js', 'bstrap/css/bootstrap.min.css', 'bstrap/js/bootstrap.min.js', 'css/main.css', 'js/translate.js', 'js/fmanager.js', 'js/idb.js', 'js/data.js', 'js/translate_api.js'],
+	load: ['lib/jquery.min.js', 'bstrap/css/bootstrap.min.css', 'bstrap/js/bootstrap.min.js', 'css/main.css', 'js/translate.js', 'js/fmanager.js', 'js/idb.js', 'js/data.js', 'js/translate_api.js', 'js/drill_panel.js'],
 	complete: function() { // Load theme done
 		log('About to show UI');
 		var ui = new UI();
@@ -13,6 +13,7 @@ yepnope({
 			var tsettingsui = new TranslateSettingsUI(ui);
 			var ttab = ui.addTab(TranslateTab);
 			var ftab = ui.addTab(FileManagerTab);
+			var dtab = ui.addTab(DrillPanelTab);
 			ui.selectTab(ttab.id);
 		}.bind(this));
 	}

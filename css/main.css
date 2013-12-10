@@ -26,7 +26,7 @@
 
 .fmanager_left {
 	position: absolute;
-	width: 30%;
+	width: 40%;
 	height: 100%;
 }
 
@@ -34,7 +34,7 @@
 	position: absolute;
 	height: 100%;
 	right: 0;
-	left: 30%;
+	left: 40%;
 }
 
 .fmanager_groups {
@@ -233,4 +233,47 @@
 
 .translate_options_form {
 	width: 100%;
+}
+
+.fmanager_file_selected {
+	margin-right: 0.5em !important;
+	margin-left: 0 !important;
+}
+
+.drill_panel_left {
+	position: absolute;
+	left: 0;
+	right: 15em;
+	height: 100%;
+}
+
+.drill_panel_right {
+	position: absolute;
+	height: 100%;
+	right: 0;
+	width: 15em;
+}
+
+.drill_panel_wrap {
+	margin: 3em;
+}
+
+.drill_line {
+	text-align: center;
+	margin-top: 10px;
+}
+
+.drill_config_line {
+	margin-bottom: 1em;
+}
+
+.drill_line_size {
+	margin: 0.5em;
+	width: 3.5em;
+	text-align: center;
+	display: inline-block;
+}
+
+.drill_line_hidden {
+	visibility: hidden;
 }
