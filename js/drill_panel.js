@@ -31,7 +31,7 @@ DrillPanelTab.prototype.saveConfig = function() { // Save new configuration
 };
 
 DrillPanelTab.prototype.createDOM = function() {
-	var dom = $('<div class="tab_body"><div class="drill_panel_left"><div class="drill_panel_wrap"><div class="drill_line_0 drill_line"></div><div class="drill_line_1 drill_line"></div><div class="drill_line_2 drill_line"></div></div></div><div class="drill_panel_right"><form role="form" id="drill_panel_right"></form></div></div>');
+	var dom = $('<div class="tab_body"><div class="drill_panel_left"><div class="drill_panel_top_buttons"><button type="button" class="btn btn-success drill_do_window">Open in new window</button></div><div class="drill_panel_wrap"><div class="drill_line_0 drill_line"></div><div class="drill_line_1 drill_line"></div><div class="drill_line_2 drill_line"></div></div></div><div class="drill_panel_right"><form role="form" id="drill_panel_right"></form></div></div>');
 	this.div = dom;
 	var captions = ['Original:', 'Transcription:', 'Translation:'];
 	var createLineConfigUI = function(index) { // Creates line config buttons
@@ -102,11 +102,51 @@ DrillPanelTab.prototype.createDOM = function() {
 			createLineConfigUI(i);
 		};
 		createTimeoutConfigUI();
+		this.applyStyle();
 	}.bind(this));
+	dom.find('.drill_do_window').on('click', function() { // Toggle new window
+		this.toggleWindow();
+	}.bind(this))
 	return dom;
 };
 
+DrillPanelTab.prototype.toggleWindow = function() { // Shows/hides window
+	if (this.popup) { // Close popup
+		this.popup.close();
+		this.popup = null;
+		return;
+	};
+	this.popup = true;
+	chrome.app.window.create('popup.html', {
+		id: 'popup',
+		alwaysOnTop: true,
+		bounds: {
+			width: 400,
+			height: 300
+		},
+		minWidth: 300,
+		minHeight: 300
+	}, function(win) { // Window created
+		
+		$(window).on('message', function(evt) { // Received message
+			var data = evt.originalEvent.data;
+			if (data.type == 'popup') { // Received style
+				this.popup = win;
+				this.applyStyle();
+				this.nextWord();
+			};
+		}.bind(this));
+	}.bind(this));
+};
+
 DrillPanelTab.prototype.applyStyle = function() { // Applies style according to config
+	if (this.popup) { // Send message
+		this.popup.contentWindow.postMessage({
+			type: 'style',
+			style: this.config
+		}, '*');
+		return;
+	};
 	var applyToLine = function(index) { // One line handling
 		var div = this.div.find('.drill_line_'+index);
 		div.css('font-size', ''+(this.config['size_'+index])+'px');
@@ -132,10 +172,17 @@ DrillPanelTab.prototype.nextWord = function() { // Show next word
 	var fillLine = function(index, word) { // Fills line
 		this.div.find('.drill_line_'+index).text(word.items[index] || '');
 	}.bind(this);
-	for (var i = 0; i < 3; i++) { // Fill lines
-		fillLine(i, this.words[index]);
-	};
 	this.timeoutID = setTimeout(function() { // next word
 		this.nextWord();
 	}.bind(this), 1000*this.config.timeout);
+	if (this.popup) { // Send message
+		this.popup.contentWindow.postMessage({
+			type: 'word',
+			word: this.words[index]
+		}, '*');
+		return;
+	};
+	for (var i = 0; i < 3; i++) { // Fill lines
+		fillLine(i, this.words[index]);
+	};
 };

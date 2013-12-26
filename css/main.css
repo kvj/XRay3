@@ -277,3 +277,8 @@
 .drill_line_hidden {
 	visibility: hidden;
 }
+
+.drill_panel_top_buttons {
+	text-align: left;
+	padding-left: 0.5em;
+}
