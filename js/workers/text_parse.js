@@ -30,8 +30,8 @@ var processText = function(lines) { // Processes text
 			var wordFound = null;
 			for (var k = 0; k < words.length; k++) { // For every word available
 				var word = words[k];
-				var orig = word.items[0];
-				if (line.substr(j, orig.length) == orig) { // Found
+				var orig = word.items[0] || '';
+				if (orig && line.substr(j, orig.length) == orig) { // Found
 					if (orig.length>maxLen) { // Biggest one
 						maxLen = orig.length;
 						wordFound = word;
